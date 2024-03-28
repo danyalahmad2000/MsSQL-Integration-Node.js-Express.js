@@ -1,0 +1,74 @@
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
+import dotenv from "dotenv";
+import pkg from 'mssql';
+const { ConnectionPool, Request, TYPES } = pkg;
+
+dotenv.config(); // Load environment variables from .env file
+const app = express();
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+const connectionConfig = {
+    server: '172.16.1.66',
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    options: {
+        TrustServerCertificate: true,
+        enableArithAbort: true,
+        instancename: 'default', // Only needed for default instances
+        trustServerCertificate: true,
+        integratedSecurity: true, // Enables Windows Authentication
+    }
+};
+
+const pool = new ConnectionPool(connectionConfig);
+pool.connect( (err) => {
+    if (err) {
+        console.error('Error connecting to database:', err);
+    } else {
+        console.log("Database connected successfully");
+    }
+});
+
+app.post('/submitData', (req, res) => {
+    const data = req.body;
+
+    if (!data) {
+        return res.status(400).json({ message: "Data not provided" });
+    }
+
+    // Insert data into database
+    executeStatement(pool, data)
+        .then(() => {
+            console.log("Data inserted successfully");
+            res.status(200).json({ message: "Data received and inserted into database successfully" });
+        })
+        .catch((err) => {
+            console.error("Error inserting data into database:", err);
+            res.status(500).json({ message: "Error inserting data into database" });
+        });
+});
+
+function executeStatement(pool, data) {
+    return new Promise((resolve, reject) => {
+        const request = new Request(pool);
+        request.query('INSERT INTO [mne].[MNE].[SISAPP_CRITICAL_INDICATORS_REPORT] (SCHOOL_CODE, SCHOOL_REG_STATUS) VALUES (@SCHOOL_CODE, @SCHOOL_REG_STATUS)', (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+
+        request.input('SCHOOL_CODE', TYPES.NVarChar, data.SCHOOL_CODE);
+        request.input('SCHOOL_REG_STATUS', TYPES.NVarChar, data.SCHOOL_REG_STATUS);
+    });
+}
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
