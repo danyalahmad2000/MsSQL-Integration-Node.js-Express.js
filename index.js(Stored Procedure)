@@ -33,6 +33,30 @@ pool.connect((err) => {
     }
 });
 
+// Define a route to welcome users and provide information about the API
+app.get('/', (req, res) => {
+    const ipAddress = req.ip; // Extract IP address from request
+    const welcomeMessage = `Welcome to DIGIMON Indicator API. You are accessing from IP address: ${ipAddress}`;
+    res.status(200).send(welcomeMessage);
+});
+
+
+// Define a route to fetch all data from the database
+app.get('/allData', (req, res) => {
+    const request = new Request(pool);
+    request.query('SELECT * FROM [mne].[MNE].[SISAPP_CRITICAL_INDICATORS_REPORT]', (err, result) => {
+        if (err) {
+            console.error("Error fetching data from database:", err);
+            res.status(500).json({ message: "Error fetching data from database" });
+        } else {
+            const data = result.recordset; // Extracting the recordset from the result
+            const rowCount = result.recordset.length; // Get the count of rows fetched
+            res.status(200).json({ count: rowCount, data }); // Include count in the response
+        }
+    });
+});
+
+
 app.post('/submitData', (req, res) => {
     const data = req.body;
 
@@ -55,7 +79,6 @@ app.post('/submitData', (req, res) => {
 function executeStoredProcedure(pool, data) {
     return new Promise((resolve, reject) => {
         const request = new Request(pool);
-        //request.input('databaseTableColumns', TYPES.NVarChar, data.(JSONKey);
         request.input('SCHOOL_CODE', TYPES.NVarChar, data.SCHOOLCODE);
         request.input('SCHOOL_REG_STATUS', TYPES.NVarChar, data.SCHOOL_REG_STATUS);
         request.input('REGISTRATION_EXP_DATE', TYPES.DateTime2, new Date(data.REGISTRATION_EXP_DATE));
