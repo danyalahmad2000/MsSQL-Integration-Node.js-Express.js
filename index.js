@@ -55,6 +55,7 @@ app.post('/submitData', (req, res) => {
 function executeStoredProcedure(pool, data) {
     return new Promise((resolve, reject) => {
         const request = new Request(pool);
+        //request.input('databaseTableColumns', TYPES.NVarChar, data.(JSONKey);
         request.input('SCHOOL_CODE', TYPES.NVarChar, data.SCHOOLCODE);
         request.input('SCHOOL_REG_STATUS', TYPES.NVarChar, data.SCHOOL_REG_STATUS);
         request.input('REGISTRATION_EXP_DATE', TYPES.DateTime2, new Date(data.REGISTRATION_EXP_DATE));
