@@ -18,7 +18,7 @@ app.use(bodyParser.json()); // Parse JSON bodies
 
 // Database connection configuration
 const connectionConfig = {
-    server: '172.16.1.66', // Database server address
+    server: 'DB_IP', // Database server address
     user: process.env.DB_USER, // Database user from environment variables
     password: process.env.DB_PASSWORD, // Database password from environment variables
     options: {
